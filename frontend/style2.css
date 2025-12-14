@@ -1,0 +1,20 @@
+@media only screen and (max-width:590px) {
+    .Home {
+        width: 590px;
+        height: 932px;
+    }
+    
+
+
+    .testdrive .input input {
+        width: 370px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1rem;
+        
+    }
+
+
+    
+}

@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard - CarShowcase Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <style>
+        /* ADDED STYLES for Bookings Section */
+        .booking-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 20px;
+        }
+
+        .booking-item {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-left: 5px solid #007bff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .booking-info {
+            flex-grow: 1;
+        }
+
+        .booking-info h4 {
+            margin-top: 0;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .booking-car-details {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-PENDING {
+            background-color: #ffc107;
+            color: #343a40;
+        }
+
+        .status-PAID {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-CANCELLED {
+            background-color: #dc3545;
+            color: white;
+        }
+        .delete-btn{
+            padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: white;
+    background-color: #dc3545;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s 
+ease;
+        }
+        .delete-btn:hover{
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav class="nav">
+            <div class="logo">
+                <div>
+                <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+            </div>
+            </div>
+            <ul class="more">
+                </ul>
+        </nav>
+    </header>
+
+    <div class="page-container">
+        <div class="page-content">
+            <h1>My Showroom Dashboard</h1>
+            
+            <div id="error-message" class="hidden" style="color: red; margin: 15px 0;"></div>
+
+            <div class="dashboard-grid">
+                <div class="dashboard-form-container">
+                    <h3 id="form-title">Add a New Car</h3>
+                    <form id="add-car-form" class="dashboard-form">
+                        <input type="text" id="brand" placeholder="Brand (e.g., Tesla)" required>
+                        <input type="text" id="model" placeholder="Model (e.g., Model S)" required>
+                        <input type="number" id="year" placeholder="Year" required>
+                        <input type="number" id="price" placeholder="Price" required>
+                        <input type="file" id="imageFile" placeholder="Image">
+                        <textarea id="specificationsJson" rows="6" placeholder='Specifications in JSON format, e.g.: {"Engine": "V8", "Horsepower": "450hp", "Color": "Red"}'></textarea>
+                        <button type="submit">Add Car</button>
+                    </form>
+                </div>
+
+                <div>
+                    <h2>My Cars</h2>
+                    <ul id="owner-car-list-container" class="owner-car-list">
+                        </ul>
+                </div>
+            </div>
+            
+            <hr style="margin: 40px 0;">
+            <section class="bookings-section">
+                <h2>🚗 Showroom Bookings</h2>
+                <div id="booking-error-message" class="hidden" style="color: red; margin: 15px 0;"></div>
+                <div id="Prebooking-error-message" class="hidden" style="color: red; margin: 15px 0;"></div>
+                <ul id="showroom-testdrive-list" class="booking-list"><p>Loading bookings...</p></ul>
+                <ul id="showroom-prebooking-list" class="booking-list"><p>Loading bookings...</p></ul>
+            </section>
+            </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="script.js"></script>
+<script>
+    const token = getAuthToken();
+    const role = localStorage.getItem('userRole');
+    const username = localStorage.getItem('username'); // Ensure you get the username!
+    const errorContainer = document.getElementById('error-message');
+    const carListContainer = document.getElementById('owner-car-list-container');
+    const addCarForm = document.getElementById('add-car-form');
+    
+    // NEW CONSTANTS
+    const testDriveList = document.getElementById("showroom-testdrive-list");
+    const preBookingList = document.getElementById("showroom-prebooking-list");
+    const bookingErrorContainer = document.getElementById('booking-error-message');
+    const PrebookingErrorContainer = document.getElementById('Prebooking-error-message');
+    const varify = document.querySelector('#varify');
+
+    let showroomId = null; // Declare showroomId in the scope accessible to all functions
+
+    // Page Security and Initial Data Load
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!token || role !== 'ROLE_OWNER') {
+            // Not an owner, redirect to login
+            window.location.href = 'login.html';
+        } else {
+            // User is an owner, load their cars AND bookings
+            fetchOwnerCars();
+            // 🚀 CRITICAL FIX: Load the ID first, which then calls fetchShowroomBookings
+            loadShowroomAndBookings(); 
+        }
+    });
+
+    // 1. Fetch and display owner's cars (Existing function)
+    async function fetchOwnerCars() {
+        // ... (rest of fetchOwnerCars remains unchanged) ...
+        displayLoading(carListContainer);
+        try {
+            const response = await fetch(`${API_BASE_URL}/owner`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const cars = await response.json();
+                renderOwnerCars(cars);
+            } else if(response.status === 403) {
+                 displayError(carListContainer, 'Forbidden: You do not have permission.');
+            } else {
+                displayError(carListContainer, 'Failed to load your cars.');
+            }
+        } catch (error) {
+            console.error('Fetch cars error:', error);
+            displayError(carListContainer, 'An error occurred. Please try again.');
+        }
+    }
+
+    function renderOwnerCars(cars) {
+        // ... (rest of renderOwnerCars remains unchanged) ...
+        carListContainer.innerHTML = ''; // Clear loading
+        if (cars.length === 0) {
+            carListContainer.innerHTML = '<p>You have not added any cars yet.</p>';
+            return;
+        }
+        
+        cars.forEach((car, index) => {
+            const carItem = document.createElement('li');
+            carItem.className = 'owner-car-item';
+            carItem.style.animationDelay = `${index * 0.1}s`;
+            carItem.innerHTML = `
+                <img src="${car.imageUrl || 'https://placehold.co/100x60/eee/999?text=No+Image'}" alt="${car.model}">
+                <div class="info">
+                    <h4>${car.brand} ${car.model} (${car.year})</h4>
+                    <p>₹${car.price.toLocaleString()}</p>
+                </div>
+                <button class="delete-btn" data-id="${car.id}">Delete</button>
+                <button style="border: none; background: none;"><a href="car-details.html?id=${car.id}" id="viewdetails" style="padding: 5px;
+    
+    
+    text-decoration: none;
+    border: none;
+    align-self:center;
+    padding: 8px 15px;
+font-size: 0.9rem;
+font-weight: bold;
+color: white;
+background-color:#0056b3 ;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+transition: background-color 0.3s 
+ease;
+margin:10px;
+    ">View Details</a></button>
+            `;
+            carListContainer.appendChild(carItem);
+        });
+    }
+
+// --- ADD CAR --- (Modified function for Multipart File Upload)
+    // ...
+addCarForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorContainer.classList.add("hidden");
+
+    const brandEl = document.getElementById("brand");
+    const modelEl = document.getElementById("model");
+    const yearEl = document.getElementById("year");
+    const priceEl = document.getElementById("price");
+    const imageFileEl = document.getElementById("imageFile"); 
+    // 🚩 CHANGE 1: Reference the new specifications input
+    const specificationsJsonEl = document.getElementById("specificationsJson"); 
+
+    let specificationsObject = {};
+    
+    // 🚩 CHANGE 2: Parse the JSON string for specifications
+    try {
+        const specValue = specificationsJsonEl.value.trim();
+        if (specValue) {
+            specificationsObject = JSON.parse(specValue);
+        }
+    } catch (error) {
+        errorContainer.textContent = "Error: Specifications must be valid JSON format.";
+        errorContainer.classList.remove("hidden");
+        console.error("JSON Parsing Error:", error);
+        return; // Stop form submission on invalid JSON
+    }
+
+    const formData = new FormData();
+
+    // 1. Prepare the Car DTO data
+    const carDtoData = {
+        brand: brandEl.value,
+        model: modelEl.value,
+        year: parseInt(yearEl.value),
+        price: parseFloat(priceEl.value),
+        // 🚩 CHANGE 3: Remove description and use the parsed specifications object
+        specifications: specificationsObject 
+    };
+    
+    // 💡 Create a Blob to explicitly set the Content-Type to application/json
+    const carDtoBlob = new Blob([JSON.stringify(carDtoData)], {
+        type: "application/json"
+    });
+
+    // Append the JSON Blob under the key "carDto"
+    formData.append("carDto", carDtoBlob);
+
+
+    // 2. Append the file under the key "imageFile" (unchanged)
+    if (imageFileEl.files.length > 0) {
+        formData.append("imageFile", imageFileEl.files[0]);
+    } else {
+        errorContainer.textContent = "Please select an image file.";
+        errorContainer.classList.remove("hidden");
+        return; 
+    }
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/owner`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData 
+            });
+
+            if (res.status === 201) {
+                addCarForm.reset();
+                fetchOwnerCars();
+            } else {
+                const err = await res.text();
+                errorContainer.textContent = `Failed to add car: ${err}`;
+                errorContainer.classList.remove("hidden");
+            }
+
+        } catch (error) {
+            errorContainer.textContent = "Error adding car.";
+            errorContainer.classList.remove("hidden");
+            console.error(error);
+        }
+});
+    // 3. Handle Delete Car (Event Delegation) (Existing function)
+    carListContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('delete-btn')) {
+            const carId = e.target.dataset.id;
+            
+            // This is a temporary fix because car.id is missing from the DTO.
+            if(!carId || carId === 'undefined') {
+                alert('Error: Cannot delete car. Car ID is missing. (This is a DTO bug in CarService)');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this car?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/owner/${carId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) { // 204 No Content
+                    fetchOwnerCars(); // Refresh the list
+                } else {
+                    const errorText = await response.text();
+                    alert(`Failed to delete car: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Delete car error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    });
+
+
+    // ----------------------------------------------------------------
+    // ** BOOKING FUNCTIONALITY (with correction) **
+    // ----------------------------------------------------------------
+
+    async function loadShowroomAndBookings() {
+        if (!token || !username) {
+            console.error("Authentication token or username is missing.");
+            bookingErrorContainer.textContent = 'Authentication required to view bookings.';
+            bookingErrorContainer.classList.remove("hidden");
+            return;
+        }
+
+        try {
+            const ownerUrl = `${API_BASE_URL}/api/auth/find/${username}`;
+            
+            // --- STEP 1: Fetch Owner Profile to get Showroom ID ---
+            const ownerResponse = await fetch(ownerUrl, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!ownerResponse.ok) {
+                const errorText = await ownerResponse.text();
+                throw new Error(`Failed to load owner profile: ${errorText}`);
+            }
+
+            // 💡 CRITICAL CORRECTION: Read as TEXT, not JSON, because the backend returns a raw ID (e.g., "2").
+            const returnedIdText = await ownerResponse.text();
+            const showroomIdValue = returnedIdText.trim(); 
+            
+            if (showroomIdValue && showroomIdValue.length > 0) {
+                // Assign the cleaned ID string to the outer-scoped variable
+                showroomId = showroomIdValue; 
+                console.log(`Showroom ID found: ${showroomId}`);
+                
+                // --- STEP 2: Fetch Bookings using the Showroom ID ---
+                await fetchShowroomBookings();
+                await fetchShowroomPreBookings();
+            } else {
+                testDriveList.innerHTML = '<p>Owner profile loaded, but no valid Showroom ID was returned.</p>';
+                // Explicitly set to null to avoid using stale data
+                showroomId = null; 
+            }
+
+        } catch (error) {
+            console.error('Initial data loading error:', error);
+            testDriveList.innerHTML = '';
+            bookingErrorContainer.textContent = `Error loading showroom data: ${error.message}`;
+            bookingErrorContainer.classList.remove("hidden");
+        }
+    }
+
+    /**
+    * Fetches test-drive-booking data using the fetched showroomId.
+    */
+    async function fetchShowroomBookings() {
+        // This check is what was causing the error message previously.
+        if (!showroomId) {
+            testDriveList.innerHTML = '<p>Showroom ID not available. Cannot fetch bookings.</p>';
+            return;
+        }
+
+        testDriveList.innerHTML = `<p>Fetching bookings for Showroom ID: ${showroomId}...</p>`;
+        bookingErrorContainer.classList.add("hidden");
+
+        try {
+            // Correct endpoint usage: /showroom/{showroomId}
+            const response = await fetch(`${API_BASE_URL}/showroom/${showroomId}`, { 
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const bookings = await response.json();
+                renderShowroomBookings(bookings);
+            } else {
+                const errorText = await response.text();
+                testDriveList.innerHTML = '';
+                bookingErrorContainer.textContent = `Failed to load bookings. Server response: ${errorText}`;
+                bookingErrorContainer.classList.remove("hidden");
+            }
+        } catch (error) {
+            console.error('Fetch showroom bookings error:', error);
+            testDriveList.innerHTML = '';
+            bookingErrorContainer.textContent = 'A network error occurred while connecting to the booking service.';
+            bookingErrorContainer.classList.remove("hidden");
+        }
+    }
+    /**
+    * Renders the list of bookings using the simplified response structure.
+    * @param {Array} bookings - The array of booking objects from /showroom/{id}.
+    */
+    function renderShowroomBookings(bookings) {
+        testDriveList.innerHTML = ''; // Clear loading
+        
+        // Check if the response is an array and if it contains data
+        if (!Array.isArray(bookings) || bookings.length === 0) {
+            testDriveList.innerHTML = '<p>No Test-drive-bookings found for this showroom yet.</p>';
+            return;
+        }
+
+        bookings.forEach((booking) => {
+            const bookingItem = document.createElement('li');
+            bookingItem.className = 'booking-item';
+
+            // Format the date
+            const bookingDate = new Date(booking.date).toLocaleString('en-IN', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            // Since the new API response only gives basic booking details (no car, no paymentStatus),
+            // we hardcode 'PENDING' status and 'Car Details Missing'.
+            const status = 'PENDING';
+            const statusClass = `status-${status.toLowerCase()}`;
+            const carDetails = booking.car 
+    ? `
+        <p><strong>Car ID:</strong> ${booking.car.id}</p>
+        <p><strong>Brand:</strong> ${booking.car.brand}</p>
+        <p><strong>Model:</strong> ${booking.car.model}</p>
+        <p><strong>Year:</strong> ${booking.car.year}</p>
+      `
+    : '<p>Car Details Not Available</p>';
+
+
+            bookingItem.innerHTML = `
+                <div class="booking-info">
+                    <h4>Test-Drive-booked by: ${booking.userName}</h4>
+                    <p>Email: ${booking.email} | Phone: ${booking.phone || 'N/A'}</p>
+                    <p class="booking-car-details">
+                        ${carDetails}
+                    </p>
+                    <p>Date/Time: ${bookingDate}</p>
+                </div>
+                <button class="delete-btn" onclick="deleteTestDriveBooking(${booking.id})">
+                Delete
+            </button>
+                
+            `;
+
+            testDriveList.appendChild(bookingItem);
+        });
+    }
+
+
+    /**
+    * Fetches pre-booking data using the fetched showroomId.
+    */
+    async function fetchShowroomPreBookings() {
+        // This check is what was causing the error message previously.
+        if (!showroomId) {
+            preBookingList.innerHTML = '<p>Showroom ID not available. Cannot fetch bookings.</p>';
+            return;
+        }
+
+        preBookingList.innerHTML = `<p>Fetching bookings for Showroom ID: ${showroomId}...</p>`;
+        PrebookingErrorContainer.classList.add("hidden");
+
+        try {
+            // Correct endpoint usage: /showroom/{showroomId}
+            const response = await fetch(`${API_BASE_URL}/showrooms/${showroomId}`, { 
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const bookings = await response.json();
+                renderShowroomPreBookings(bookings);
+            } else {
+                const errorText = await response.text();
+                preBookingList.innerHTML = '';
+                bookingErrorContainer.textContent = `Failed to load bookings. Server response: ${errorText}`;
+                bookingErrorContainer.classList.remove("hidden");
+            }
+        } catch (error) {
+            console.error('Fetch showroom bookings error:', error);
+            preBookingList.innerHTML = '';
+            bookingErrorContainer.textContent = 'A network error occurred while connecting to the booking service.';
+            bookingErrorContainer.classList.remove("hidden");
+        }
+    }
+
+    function renderShowroomPreBookings(bookings) {
+    // Get the correct list container element. 
+    // Assuming 'preBookingList' is defined outside this function or accessible in its scope.
+    // (If not, you might need to use document.getElementById("showroom-prebooking-list") here)
+    // Assuming preBookingList is correct for now.
+    
+    preBookingList.innerHTML = ''; // Clear loading (CORRECT)
+    
+    // Check if the response is an array and if it contains data
+    if (!Array.isArray(bookings) || bookings.length === 0) {
+        preBookingList.innerHTML = '<p>No pre-bookings found for this showroom yet.</p>';
+        return;
+    }
+
+    bookings.forEach((booking) => {
+        const bookingItem = document.createElement('li');
+        bookingItem.className = 'booking-item';
+
+        // Format the date
+        const bookingDate = new Date(booking.date).toLocaleString('en-IN', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+
+        const status = booking.paymentStatus;
+        const statusClass = `status-${status.toLowerCase()}`;
+        let verifyButtonHtml = '';
+        
+        // Conditional button logic (CORRECT)
+        if (status !== 'COMPLETED') {
+            verifyButtonHtml = `<div><button class="varify-btn" onclick="varifyPayment(${booking.id})">Verify Payment</button></div>`;
+        }
+        
+        const carDetails = booking.car 
+        ? `
+            <p><strong>Car ID:</strong> ${booking.car.id}</p>
+            <p><strong>Brand:</strong> ${booking.car.brand}</p>
+            <p><strong>Model:</strong> ${booking.car.model}</p>
+            <p><strong>Year:</strong> ${booking.car.year}</p>
+          `
+        : '<p>Car Details Not Available</p>';
+
+        bookingItem.innerHTML = `
+            <div class="booking-info">
+                <h4>Pre-booked by: ${booking.userName}</h4>
+                <p>Email: ${booking.email} | Phone: ${booking.phone || 'N/A'}</p>
+                <div class="booking-car-details">
+                    ${carDetails}
+                </div>
+                <p>Date/Time: ${bookingDate}</p>
+            </div>
+            
+            <span class="status-badge ${statusClass}" style="display:flex; align-items: center; gap:10px">
+                <div style="align-self: center; justify-self: center;">${status}</div>
+                ${verifyButtonHtml}
+            </span>
+
+            <button class="delete-btn" onclick="deletePreBooking(${booking.id})">
+                Delete
+            </button>
+            `;
+
+        // 👇 CRITICAL FIX: Append to preBookingList
+        preBookingList.appendChild(bookingItem); 
+    });
+}
+
+    // --- DELETE PRE-BOOKING ---
+async function deletePreBooking(id) {
+    if (!confirm("Are you sure you want to delete this pre-booking?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/prebooking/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            // SUCCESS!
+            alert("Pre-booking deleted successfully.");
+            
+            // REFRESH THE UI HERE
+            fetchShowroomPreBookings(); 
+        } else {
+            const err = await response.text();
+            alert("Failed to delete: " + err);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Server error.");
+    }
+}
+
+// --- VERIFY PAYMENT ---
+async function varifyPayment(id) {
+    if (!confirm("Are you sure you want to verify this payment?")) return;
+
+    // Optional: Show a "Verifying..." text on the button while waiting (Advanced)
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/varify/${id}`, {
+            method: "GET", // Assuming your backend uses GET for this
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            // SUCCESS!
+            alert("Payment verified successfully.");
+
+            // REFRESH THE UI HERE
+            // This grabs the new list from the server. 
+            // The server will send back the specific booking with "COMPLETED" status.
+            // The render function will then hide the button.
+            fetchShowroomPreBookings(); 
+        } else {
+            const err = await response.text();
+            alert("Failed to verify: " + err);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Server error.");
+    }
+}
+
+// --- DELETE TEST DRIVE ---
+async function deleteTestDriveBooking(id) {
+    if (!confirm("Are you sure you want to delete this test-drive booking?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/booking/${id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            alert("Booking deleted successfully.");
+            
+            // REFRESH THE TEST DRIVE LIST
+            fetchShowroomBookings(); 
+        } else {
+            const err = await response.text();
+            alert("Failed to delete: " + err);
+        }
+    } catch (e) {
+        alert("Server error.");
+    }
+}
+
+</script>
+</body>
+</html>

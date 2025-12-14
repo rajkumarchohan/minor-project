@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Auto Deal - Inventory</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Basic styles for functional elements added here since external CSS is unknown */
+        .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .showroom-card,
+         .car-card {
+             border: 1px solid #ddd; 
+             padding: 15px; 
+             border-radius: 8px; 
+             cursor: pointer; 
+             height: auto; }
+        .showroom-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .car-card img { width: 100%; height: auto; border-radius: 4px; }
+        .car-details { padding-top: 10px; }
+        #back-btn { 
+            display: none; 
+            margin-bottom: 20px; 
+            padding: 10px 15px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer;
+        }
+
+    </style>
+    <script src="script.js"></script>
+</head>
+
+<body>
+    <header>
+        <nav class="nav">
+            <div>
+                <!-- Using a placeholder logo -->
+                <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+            </div>
+            <ul class="more">
+                <!-- Nav bar will be built by script.js -->
+            </ul>
+        </nav>
+    </header>
+
+    <div class="page-container Inventary">
+        <div class="page-content content">
+            <button id="back-btn" style="display: none;">← Back to Showrooms</button>
+            
+            <h2 id="inventory-title">Loading Showrooms...</h2>
+            
+            <div id="inventory-container" class="grid-view">
+                </div>
+        </div>
+    </div>
+
+    <script>
+// --- Configuration ---
+const API_URL = 'http://localhost:8080/show/all'; // Point to your API
+
+// --- State Management ---
+let globalShowrooms = []; // We will store the fetched data here
+
+// --- DOM Elements (CORRECTED IDs) ---
+// Now targeting the correct IDs from the HTML structure above
+const gridContainer = document.getElementById('inventory-container');
+const pageTitle = document.getElementById('inventory-title');
+const backButton = document.getElementById('back-btn');
+
+
+// --- 1. THE FIX: Fetch and Clean Double JSON (No change in logic) ---
+async function fetchAndCleanData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        
+        const text = await response.text();
+
+        // Attempt standard parse first
+        try { return JSON.parse(text); } catch (e) {}
+
+        // Fallback: Smart Bracket Counting to find the first valid array
+        let bracketCount = 0;
+        let inString = false;
+        
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if (char === '"' && text[i-1] !== '\\') inString = !inString; // Toggle string mode
+            
+            if (!inString) {
+                if (char === '[') bracketCount++;
+                if (char === ']') bracketCount--;
+                
+                // If we return to 0, we found the end of the first array
+                if (bracketCount === 0 && i > 0) {
+                    return JSON.parse(text.substring(0, i + 1));
+                }
+            }
+        }
+        throw new Error("Could not parse malformed JSON");
+    } catch (error) {
+        console.error(error);
+        if (pageTitle) {
+            pageTitle.textContent = "Error loading data: Check API server.";
+            pageTitle.style.color = "red";
+        }
+        return [];
+    }
+}
+
+// --- 2. Initialize App ---
+async function init() {
+    // Check if essential DOM elements are present before proceeding
+    if (!gridContainer || !pageTitle) {
+        console.error("Critical DOM elements are missing. Check your HTML IDs.");
+        return;
+    }
+    
+    // Fetch data ONCE and store it
+    globalShowrooms = await fetchAndCleanData(API_URL);
+    
+    // Initial Render: Show the list of showrooms
+    renderShowroomList();
+}
+
+// --- 3. View: Showroom List (Basic Details Only) ---
+function renderShowroomList() {
+    // Update Header
+    pageTitle.textContent = "Select a Showroom";
+    backButton.style.display = "none"; // Hide back button
+    gridContainer.innerHTML = '';
+    
+    // Ensure the container has the grid class for proper display
+    gridContainer.className = 'grid-view';
+
+    if (globalShowrooms.length === 0) {
+        gridContainer.innerHTML = '<p style="text-align:center;">No showrooms found. Please check your API data.</p>';
+        return;
+    }
+
+    globalShowrooms.forEach(showroom => {
+        const card = document.createElement('div');
+        card.className = 'showroom-card';
+        
+        // ONLY SHOW: Name, Location, Car Count
+        card.innerHTML = `
+            <h2>${showroom.name}</h2>
+            <p><strong>📍 Location:</strong> ${showroom.location}</p>
+            <p><strong>🚗 Available Cars:</strong> ${showroom.cars ? showroom.cars.length : 0}</p>
+        `;
+
+        // Click Event: Switch to Car View
+        card.addEventListener('click', () => {
+            renderCarList(showroom.id);
+        });
+
+        gridContainer.appendChild(card);
+    });
+}
+
+// --- 4. View: Car List (Full Details) ---
+function renderCarList(showroomId) {
+    // Find the specific showroom object from our memory
+    const showroom = globalShowrooms.find(s => s.id === showroomId);
+    
+    if (!showroom) return;
+
+    // Update Header
+    pageTitle.textContent = `${showroom.name} Inventory`;
+    backButton.style.display = "inline-block"; // Show back button
+    gridContainer.innerHTML = '';
+    
+    // Ensure the container has the grid class for proper display
+    gridContainer.className = 'grid-view';
+
+    const cars = showroom.cars || [];
+
+    if (cars.length === 0) {
+        gridContainer.innerHTML = '<p>No cars available in this showroom.</p>';
+        return;
+    }
+
+    cars.forEach(car => {
+        const card = document.createElement('div');
+        card.className = 'car-card';
+        
+        // Format specifications for rendering
+        const specs = Object.entries(car.specifications || {}).map(([key, val]) => 
+            `<span>${key}: ${val}</span>`
+        ).join('<br>');
+        
+        // Render ALL car details here
+       card.innerHTML = `
+    <div class="car-card-outer-wrapper">
+    <div class="car-card">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <img src="${car.imageUrl}" height="175px" alt="${car.brand} ${car.model}">
+            <div style="background:none; padding:10px; font-size:0.85em; border-radius:5px; display: flex; flex-direction: column;">
+                <strong>Specifications:</strong><br>
+                <div style="display: flex; flex-direction: column;">
+                    ${specs}
+                </div>
+            </div>
+            <button style="border: none; background: none;"><a href="car-details.html?id=${car.id}" id="viewdetails">View Details</a></button>
+        </div>
+    </div>
+</div>
+`;
+
+        gridContainer.appendChild(card);
+    });
+}
+
+// --- 5. Event Listeners ---
+// Check if backButton exists before adding listener
+if (backButton) {
+    backButton.addEventListener('click', () => {
+        renderShowroomList(); // Go back to the main list
+    });
+}
+
+// Start the app
+document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+
+</html>

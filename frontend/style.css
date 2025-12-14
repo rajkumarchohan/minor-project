@@ -1,0 +1,853 @@
+/* === YOUR ORIGINAL STYLES === */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+body header{
+    position: sticky;
+    top: 0;
+    z-index: 100; /* Increased z-index */
+}
+.nav{
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgb(231, 228, 228);
+    padding: 10px 0; /* Added padding */
+}
+.logo{
+    cursor: pointer;
+}
+.more{
+    display: flex;
+    gap: 25px;
+    align-items: center; /* Vertically center nav items */
+}
+.more li{
+    list-style: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 20px;
+}
+.more li a{
+    text-decoration: none;
+    color: black;
+    transition: color 0.3s ease; /* Animation */
+}
+.more li a:hover{
+    color: blue;
+}
+
+/* === MODIFIED & NEW STYLES === */
+
+/* General Page Styling */
+.page-container {
+    width: 100%;
+    min-height: 80vh;
+    padding: 40px 20px;
+    background-color: #f4f7f6;
+}
+.page-content {
+    max-width: 1200px;
+    margin: auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+}
+.page-content h1, .page-content h2 {
+    font-family: 'Playfair Display', serif;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* --- Login/Register & Test Drive Form Styles --- */
+/* Based on your .testdrive / .page3 styles */
+.form-section {
+    width: 100%;
+    min-height: 80vh;
+    background-color:rgb(231, 228, 228);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+.form-container {
+    width: 100%;
+    max-width: 500px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px; /* Reduced gap */
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.form-container h1 {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 0;
+}
+.form-container p {
+    margin-bottom: 15px;
+    color: #666;
+}
+.form-input-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    width: 100%;
+}
+.form-input-group input,
+.form-input-group select,
+.form-input-group textarea {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+.form-input-group input:focus,
+.form-input-group select:focus,
+.form-input-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0,123,255,0.3);
+}
+.form-input-group label {
+    font-size: 0.9rem;
+    color: #555;
+    width: 100%;
+    margin-bottom: -10px; /* Pull label closer to its input */
+}
+.form-input-group .radio-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+}
+.form-input-group button {
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    background-color: #007bff; /* Changed from red */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%; /* Make button full width */
+    transition: all 0.3s ease;
+}
+.form-input-group button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.form-container .form-link {
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+.form-container .form-link a {
+    color: #007bff;
+    text-decoration: none;
+}
+/* Style for the welcome message in the nav */
+.nav-welcome {
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: default;
+}
+
+
+/* --- Car Card & Inventory Styles --- */
+/* Based on your .Inventary styles */
+.Inventary {
+    background-color: #f4f7f6;
+    padding: 20px;
+}
+.Inventary .content {
+    max-width: 1200px;
+    margin: auto;
+}
+.showroom-list, .car-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+.showroom-card, .car-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.07);
+    overflow: hidden;
+    
+    /* --- ANIMATION --- */
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.5s ease-out forwards;
+    transition: all 0.3s ease-in-out;
+}
+.showroom-card:hover,
+.car-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.car-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+}
+.car-card .details {
+    padding: 20px;
+}
+.car-card .details h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 10px;
+}
+.car-card .details p {
+    font-size: 1.2rem;
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+.car-card .details .car-desc {
+    font-size: 0.95rem;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 20px;
+    /* Limit description lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+.car-card .details a {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    background-color: #333;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+.car-card .details a:hover {
+    background-color: #007bff;
+}
+
+/* Showroom Card Specifics */
+.showroom-card {
+    padding: 25px;
+    cursor: pointer;
+}
+.showroom-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: #007bff;
+}
+.showroom-card p {
+    color: #666;
+    margin-top: 10px;
+}
+
+
+/* --- Owner Dashboard Styles --- */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+}
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.dashboard-form-container {
+    background: #fdfdfd;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+}
+.dashboard-form-container h3 {
+    font-family: 'Playfair Display', serif;
+    margin-bottom: 20px;
+    border-bottom: none;
+    font-size: 1.5rem;
+}
+.dashboard-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.dashboard-form input,
+.dashboard-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+.dashboard-form button {
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+    background-color: #28a745; /* Green for add */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.dashboard-form button:hover {
+    background-color: #218838;
+}
+
+.owner-car-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.owner-car-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fdfdfd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    /* --- ANIMATION --- */
+    opacity: 0;
+    transform: translateX(20px);
+    animation: fadeIn 0.5s ease-out forwards;
+}
+.owner-car-item img {
+    width: 100px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+}
+.owner-car-item .info {
+    flex-grow: 1;
+}
+.owner-car-item .info h4 {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+.owner-car-item .info p {
+    font-size: 0.9rem;
+    color: #007bff;
+}
+.owner-car-item .delete-btn {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: white;
+    background-color: #dc3545; /* Red for delete */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+.owner-car-item .delete-btn:hover {
+    background-color: #c82333;
+}
+
+/* --- Car Details Page --- */
+.car-details-container {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 30px;
+}
+@media (max-width: 900px) {
+    .car-details-container {
+        grid-template-columns: 1fr;
+    }
+}
+.car-details-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.car-details-info h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    border: none;
+}
+.car-details-info .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+    margin: 10px 0 20px 0;
+}
+.car-details-info .description {
+    font-size: 1.1rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+.car-details-info .specs h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+.car-details-info .specs ul {
+    list-style: none;
+    padding: 0;
+}
+.car-details-info .specs li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.car-details-info .specs li strong {
+    color: #333;
+}
+.car-details-info .cta-button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: white;
+    background-color: #007bff;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    margin-top: 30px;
+    transition: all 0.3s ease;
+}
+.car-details-info .cta-button:hover {
+    background-color: #0056b3;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+
+
+/* --- ANIMATION KEYFRAMES --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Utility Classes */
+.hidden {
+    display: none;
+}
+#loading-spinner {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+    padding: 30px;
+}
+#error-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #dc3545;
+    padding: 30px;
+    background: #ffebee;
+    border-radius: 8px;
+}
+
+/* Your original styles (for home page, etc.) */
+/* I've kept them, but they might need merging */
+.Home { /* Your original home section */
+    width: 100%;
+    height: 100vh;
+    background-image: url('https://placehold.co/1920x1080/333/fff?text=Hero+Background');
+    background-position: center center;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 5px solid black;
+    position: relative;
+    color: white;
+}
+.Home .content {
+    background-color: rgba(0, 0, 0, 0.532);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 35px;
+    border-radius: 50px;
+    padding: 100px;
+    text-align: center;
+}
+.Home .content button{
+    background-color: #007bff; /* Changed from red */
+    border: none;
+    padding: 15px 30px;
+    font-size: 20px;
+    font-weight: 700;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.Home .content button a{
+    text-decoration: none;
+    color: white;
+}
+.Home .content button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Your original .page2 styles */
+/* Renamed to use in inventary.html */
+.Inventary .models ul {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    white-space: nowrap;
+    padding: 20px 0;
+}
+.Inventary .models ul li{
+    list-style: none;
+}
+.Inventary .models img{
+    width: 150px;
+    height: 125px;
+    object-fit: cover;
+    margin-right: 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.Inventary .content .models ul .model{
+    width: 250px;
+    height: 300px;
+    border-radius: 15px;
+    margin-right: 10px;
+    background-color: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    color: white;
+}
+.Inventary .content .models ul .model button{
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    margin-top: 18px;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 5px 0;
+    width: 100%;
+}
+
+/* Your original .page3 styles (testdrive) */
+/* This is now handled by .form-section */
+.testdrive {
+    width: 100%;
+    min-height: 100vh;
+    background-color:rgb(231, 228, 228);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+.testdrive .content{
+    width: 80vw;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 25px;
+}
+.testdrive .input{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    width: 30vw;
+}
+.testdrive .input input{
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+.testdrive .input button{
+    padding:5px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    background-color: #007bff; /* Changed from red */
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.car-card {
+    width: auto;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    padding: 15px;
+    transition: 0.5s;
+}
+
+.car-card:hover {
+    background: linear-gradient(135deg, #ffffff 0%, #e9f3ff 100%);
+    transform: translateY(-5px);
+    transform: scale(1.5);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+}
+
+.car-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.prebook{
+    
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    background-color: #007bff;
+    cursor: pointer;
+    width: 100%;
+    padding: 12px 25px;
+    border-style: none; 
+    border-radius: 8px;
+    transition: 0.3s;
+    text-decoration: none;
+}
+.prebook:hover{
+    background-color: #0056b3;
+}
+.car-details-info .specs ul {
+    background-color: transparent;
+}
+#viewdetails{
+    padding: 8px;
+        border-radius: 5px;
+        background-color: #007bff;
+        color:#f0f0f0;
+        font-weight:600;
+        text-decoration: none;
+        border: none;
+        align-self:center;
+}
+#viewdetails:hover{
+    background-color:#0056b3 ;
+}
+/*
+ * Base styles for the car-card container, mimicking bg-slate-50 and rounded-2xl
+ */
+.car-card {
+    /* Mimics the size and layout from the original classes */
+    width: 100%;
+    height: 100%;
+    
+    /* Subtle background color similar to bg-slate-50 */
+    background-color: #f8fafc; 
+    
+    /* Rounded corners similar to rounded-2xl */
+    border-radius: 1rem; 
+    
+    /* Ensures the gradient overlay is clipped by the border-radius */
+    overflow: hidden; 
+    
+    /* Allows positioning of the pseudo-element for the gradient */
+    position: relative; 
+    
+    /* Sets up the flex layout for content alignment */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem; /* Gap similar to gap-6 (24px) */
+    padding: 1.5rem; /* Padding similar to p-6 (24px) */
+
+    /* Add a subtle transition for smoother hover effects */
+    transition: box-shadow 0.3s ease-out;
+    
+    /* Optional: Add a subtle initial shadow to lift the card */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+/*
+ * Base styles for the car-card container
+ */
+.car-card {
+    /* Mimics the size and layout */
+    width: 100%;
+    height: 100%;
+    
+    /* Background color: Exact match for Tailwind's bg-slate-50 */
+    background-color: #f8fafc; 
+    
+    /* Rounded corners: 1rem is close to rounded-2xl */
+    border-radius: 1rem; 
+    
+    overflow: hidden; 
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem; /* gap-6 */
+    padding: 1.5rem; /* p-6 */
+
+    /* Transition for smoother hover effects */
+    transition: all 0.4s ease-in-out; 
+    
+    /* Subtle initial shadow */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Outer Wrapper for Gradient Border (Replicates .gradient-hover-outer) */
+.car-card-outer-wrapper {
+    width: 100%;
+    height: 100%;
+    
+    /* Initial background color (bg-slate-200) */
+    background-color: #e2e8f0; 
+    
+    border-radius: 1rem; 
+    position: relative;
+    display: flex;
+    padding: 1px; /* Replicates p-[1px] */
+    transition: background-color 0.4s ease-in-out;
+}
+
+/* Hover effect for the outer wrapper: Applies the -200 gradient */
+.car-card-outer-wrapper:hover {
+    /* from-red-200 (#fecaca), via-purple-200 (#e9d5ff), to-yellow-200 (#fef08a) */
+    background: linear-gradient(
+        to bottom right, /* to-br */
+        #fecaca 0%,      
+        #e9d5ff 50%,     
+        #fef08a 100%     
+    );
+}
+/* Inner Card (Content) Styles (Replicates .gradient-hover-inner base) */
+.car-card {
+    /* Base styles */
+    width: 100%;
+    height: 100%;
+    background-color: #f8fafc; /* bg-slate-50 */
+    border-radius: 1rem; 
+    overflow: hidden; 
+    position: relative; /* Needed for ::before positioning */
+    z-index: 2; 
+
+    /* Layout and padding */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem; 
+    padding: 1.5rem; 
+    
+    transition: box-shadow 0.4s ease-in-out;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* -------------------------------------------
+ * Inner Gradient Overlay (::before)
+ * Replicates the subtle hover:bg-gradient-to-tr effect
+ * ------------------------------------------- */
+.car-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    
+    /* Initial state: Hidden */
+    opacity: 0;
+    transition: opacity 0.4s ease;
+
+    /* Define the subtle -50 gradient colors */
+    /* from-red-50 (#fef2f2), via-purple-50 (#faf5ff), to-yellow-50 (#fefce8) */
+    background: linear-gradient(
+        to top right, /* to-tr */
+        #fef2f2 0%,      
+        #faf5ff 50%,     
+        #fefce8 100%     
+    );
+    
+    border-radius: inherit; 
+    z-index: 0; /* Behind the content */
+    pointer-events: none;
+}
+
+/* * Hover effect: Show the subtle inner gradient when the outer wrapper is hovered */
+.car-card-outer-wrapper:hover .car-card::before {
+    opacity: 1;
+}
+
+/* Ensure the main content stays above the inner gradient layer */
+.car-card > div {
+    position: relative;
+    z-index: 10; 
+}
+/* CSS remains the same */
+.Home #slide {
+    top: 0;
+    left: 10vw;
+    position: absolute;
+    width: 80vw;
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.267);
+    text-align: center;
+    z-index: 10;
+}
+
+.hidden {
+    display: none;
+    opacity: 0;
+    
+}
+
+.Home #slide .text {
+    margin: 10px;
+}
+.varify-btn{
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: white;
+    background-color: #15ff00;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s 
+ease;
+}
+
+.varify-btn:hover{
+    background-color: #19980e;
+}

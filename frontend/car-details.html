@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Details - LuxuryAutoDeal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+    <style>
+        .car-details-container {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+            flex-wrap: wrap; /* Allows wrapping on smaller screens */
+        }
+        .car-details-image {
+            flex: 2;
+            min-width: 300px;
+        }
+        .car-details-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .car-details-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        .price {
+            font-size: 2em;
+            color: #007bff;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .specs ul {
+            list-style: none;
+            padding: 0;
+            background: #f8f8f8;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .specs li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cta-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #28a745; /* Green CTA */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="nav">
+            <div>
+                <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+            </div>
+            <ul class="more">
+                </ul>
+        </nav>
+    </header>
+
+    <div class="page-container">
+        <div id="details-content" class="page-content">
+            <div id="loading-spinner">Loading...</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    
+    <script>
+        // --- Core Logic: Fetching and Cleaning JSON ---
+        /**
+         * Fetches car details and handles malformed (double) JSON responses.
+         * Extracts the first complete JSON object {...} from the response text.
+         */
+        async function fetchCarDetails(id, container) {
+            displayLoading(container);
+            const API_URL = `${API_BASE_URL}/api/cars/public/${id}`;
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} - Car ID ${id} not found.`);
+                }
+                
+                const text = await response.text();
+
+                // 1. Attempt standard parse first
+                try { 
+                    return JSON.parse(text); 
+                } catch (e) {
+                    // Standard parse failed, proceed to cleaning logic
+                    console.warn("Standard JSON parse failed. Attempting cleanup.");
+                }
+
+                // 2. Fallback: Smart Curly Brace Counting to find the first valid object
+                let braceCount = 0;
+                let inString = false;
+                let startIndex = -1;
+                let endIndex = -1;
+                
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    
+                    if (char === '"' && text[i-1] !== '\\') inString = !inString;
+                    
+                    if (!inString) {
+                        if (char === '{') {
+                            if (braceCount === 0) {
+                                startIndex = i; // Found the start of the first object
+                            }
+                            braceCount++;
+                        }
+                        
+                        if (char === '}') {
+                            braceCount--;
+                        }
+                        
+                        if (braceCount === 0 && startIndex !== -1) {
+                            endIndex = i;
+                            const cleanJsonString = text.substring(startIndex, endIndex + 1);
+                            return JSON.parse(cleanJsonString);
+                        }
+                    }
+                }
+                
+                throw new Error("Could not parse malformed JSON: failed to find complete object.");
+
+            } catch (error) {
+                console.error('Fetch details error:', error);
+                displayError(container, 'Could not load car details. Check API server and JSON format.');
+                return null; 
+            }
+        }
+
+        // --- Core Logic: Rendering ---
+        function renderCarDetails(car, container) {
+            container.innerHTML = ''; // Clear loading
+
+            // Build specifications HTML
+            let specsHtml = '<ul>';
+            if (car.specifications && Object.keys(car.specifications).length > 0) {
+                for (const [key, value] of Object.entries(car.specifications)) {
+                    specsHtml += `<li><strong>${key}</strong>: <span>${value}</span></li>`;
+                }
+            } else {
+                specsHtml += '<li>No specifications available.</li>';
+            }
+            specsHtml += '</ul>';
+
+            container.innerHTML = `
+                <div class="car-details-container">
+                    <div class="car-details-image">
+                        <img src="${car.imageUrl || 'https://placehold.co/800x600/eee/999?text=No+Image'}" alt="${car.brand} ${car.model}">
+                    </div>
+                    <div class="car-details-info">
+                        <h1>${car.brand} ${car.model} (${car.year})</h1>
+                        <p class="price">₹${car.price.toLocaleString()}</p>
+                        <p class="description">${car.description || 'No description provided.'}</p>
+                        
+                        <div class="specs" ">
+                            <h3 >Specifications</h3>
+                            ${specsHtml}
+                        </div>
+                        
+                        <a href="test-drive.html" class="cta-button">Book a Test Drive</a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const carId = urlParams.get('id');
+            const contentContainer = document.getElementById('details-content');
+
+            if (carId) {
+                // Await the result of the fetchCarDetails function
+                const car = await fetchCarDetails(carId, contentContainer);
+                
+                // Only render if a car object was successfully returned
+                if (car) {
+                    renderCarDetails(car, contentContainer);
+                }
+            } else {
+                displayError(contentContainer, 'No car ID provided. Please link from the inventory page.');
+            }
+        });
+    </script>
+</body>
+</html>

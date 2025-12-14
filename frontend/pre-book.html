@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Auto Deal - Book Test Drive</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav class="nav">
+            <div class="logo">
+                <div>
+                    <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+                </div>
+            </div>
+            <ul class="more">
+                </ul>
+        </nav>
+    </header>
+
+    <section class="form-section"> 
+        <div class="form-container">
+            <h1>Prebook Drive 🚗</h1>
+            <p>Fill out the form below to book your luxury test drive appointment.</p>
+
+            <form id="test-drive-form" class="form-input-group">
+                <input type="text" id="userName" placeholder="Enter Your Name" required>
+                <input type="email" id="email" placeholder="Enter Your Email" required>
+                <input type="tel" id="phone" placeholder="Enter Your Contact No." required>
+                
+                <label for="showroom-select">1. Select a Showroom:</label>
+                <select id="showroom-select" required>
+                    <option value="">-- Loading showrooms --</option>
+                </select>
+
+                <label for="car-select">2. Select a Car:</label>
+                <select id="car-select" required disabled>
+                    <option value="">-- Select a showroom first --</option>
+                </select>
+
+                <label for="date">3. Select a Date:</label>
+                <input type="date" id="date" required>
+                
+                <button type="submit">Submit Request</button>
+                <button class="prebook"><a href="test-drive.html" class="prebook">Book a Test-drive Car</a></button>
+            </form>
+            <div id="form-message" class="hidden" style="margin-top: 15px; text-align: center;"></div>
+        </div>
+    </section>
+</body>
+
+<script src="script.js"></script>
+
+<script>
+    const showroomSelect = document.getElementById('showroom-select');
+    const carSelect = document.getElementById('car-select');
+    const dateInput = document.getElementById('date'); // ADDED: Get the date input element
+    const form = document.getElementById('test-drive-form');
+    const formMessage = document.getElementById('form-message');
+
+    // --- NEW HELPER FUNCTION TO HANDLE MALFORMED JSON ---
+    /**
+     * Fetches data and attempts to clean malformed double JSON responses.
+     * Searches for the first valid JSON array ([...]) or object ({...}) depending on isArray.
+     * @param {string} url - The API endpoint URL.
+     * @param {boolean} isArray - True if expecting an array ([...]), false if expecting an object ({...}).
+     */
+    async function fetchCleanJson(url, isArray = true) {
+        const delimiters = isArray ? ['[', ']'] : ['{', '}'];
+        const startChar = delimiters[0];
+        const endChar = delimiters[1];
+
+        const response = await fetch(url);
+        
+        // Minor change: if not OK, throw error before trying to read JSON
+        if (!response.ok) {
+             const errorText = await response.text();
+             throw new Error(`API Error ${response.status}: ${errorText.substring(0, 100)}...`);
+        }
+        
+        const text = await response.text();
+
+        // Attempt standard parse first
+        try { return JSON.parse(text); } catch (e) {}
+
+        // Fallback: Smart Delimiter Counting
+        let count = 0;
+        let inString = false;
+        let startIndex = -1;
+        let endIndex = -1;
+        
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            
+            // Handle escaped quotes
+            if (char === '"' && text[i-1] !== '\\') inString = !inString;
+            
+            if (!inString) {
+                if (char === startChar) {
+                    if (count === 0) startIndex = i; 
+                    count++;
+                }
+                
+                if (char === endChar) {
+                    count--;
+                }
+                
+                // If we return to 0 and have passed the start, we found the complete structure
+                if (count === 0 && startIndex !== -1) {
+                    endIndex = i;
+                    const cleanJsonString = text.substring(startIndex, endIndex + 1);
+                    return JSON.parse(cleanJsonString);
+                }
+            }
+        }
+        
+        throw new Error("Could not parse malformed JSON: failed to find complete structure.");
+    }
+
+
+    // 1. Populate Showrooms on page load & Set Date Min
+    document.addEventListener('DOMContentLoaded', async () => {
+        // *** NEW LOGIC ADDED HERE: Set minimum date to today ***
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        // Month is 0-indexed, so add 1 and pad with 0
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); 
+        const dd = String(today.getDate()).padStart(2, '0');
+        const minDate = `${yyyy}-${mm}-${dd}`;
+        
+        dateInput.setAttribute('min', minDate);
+        // ******************************************************
+        
+        try {
+            // Expecting an array of showrooms ([...])
+            const showrooms = await fetchCleanJson(`${API_BASE_URL}/show/all`, true); 
+            
+            showroomSelect.innerHTML = '<option value="">-- Select a showroom --</option>';
+            showrooms.forEach(showroom => {
+                const option = document.createElement('option');
+                option.value = showroom.id;
+                option.textContent = `${showroom.name} (${showroom.location})`;
+                showroomSelect.appendChild(option);
+            });
+        } catch (error) {
+            console.error('Failed to load showrooms', error);
+            showroomSelect.innerHTML = '<option value="">-- Could not load showrooms --</option>';
+        }
+    });
+
+    // 2. When Showroom changes, populate cars (MODIFIED TO USE fetchCleanJson)
+    showroomSelect.addEventListener('change', async (e) => {
+        const showroomId = e.target.value;
+        carSelect.innerHTML = '<option value="">-- Loading cars --</option>';
+        carSelect.disabled = true;
+
+        if (!showroomId) {
+            carSelect.innerHTML = '<option value="">-- Select a showroom first --</option>';
+            return;
+        }
+
+        try {
+            // Expecting an array of cars ([...])
+            const cars = await fetchCleanJson(`${API_BASE_URL}/api/cars/showroom/${showroomId}`, true); 
+            
+            carSelect.innerHTML = '<option value="">-- Select a car --</option>';
+            cars.forEach(car => {
+                const option = document.createElement('option');
+                option.value = car.id; 
+                option.textContent = `${car.brand} ${car.model}`;
+                carSelect.appendChild(option);
+            });
+            carSelect.disabled = false;
+        } catch (error) {
+            console.error('Failed to load cars', error);
+            carSelect.innerHTML = '<option value="">-- Could not load cars --</option>';
+        }
+    });
+
+    // 3. Handle Form Submission (MODIFIED to include showroomId)
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        formMessage.classList.add('hidden');
+
+        // Check if the car is selected
+        if (!document.getElementById('car-select').value) {
+            formMessage.textContent = 'Please select both a showroom and a car.';
+            formMessage.style.color = 'red';
+            formMessage.classList.remove('hidden');
+            return;
+        }
+
+        // Client-side date check (redundant due to min attribute but good for completeness)
+        const selectedDate = document.getElementById('date').value;
+        const today = new Date().toISOString().slice(0, 10);
+        if (selectedDate < today) {
+             formMessage.textContent = 'Error: The booking date must be today or a future date.';
+             formMessage.style.color = 'red';
+             formMessage.classList.remove('hidden');
+             return;
+        }
+
+        const bookingData = {
+            customerName: document.getElementById('userName').value,
+            customerEmail: document.getElementById('email').value,
+            customerPhone: document.getElementById('phone').value,
+            carId: document.getElementById('car-select').value,
+            showroomId: document.getElementById('showroom-select').value, 
+            bookingDate: selectedDate // Use the checked date
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/prebook`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+
+            if (response.ok) {
+                form.reset();
+                carSelect.innerHTML = '<option value="">-- Select a showroom first --</option>';
+                carSelect.disabled = true;
+                formMessage.textContent = 'Booking successful! We will contact you shortly.';
+                formMessage.style.color = 'green';
+                formMessage.classList.remove('hidden');
+            } else {
+                // Read error message from the response body (if possible)
+                const errorText = await response.text();
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch(e) {
+                    errorData = {};
+                }
+                
+                let errorMessage = errorData.message || `Booking failed with status: ${response.status}`;
+                
+                if(errorData.errors) {
+                    // Concatenate Spring Boot validation errors
+                    errorMessage = Object.values(errorData.errors).join(', ');
+                } else if (response.status !== 400 && errorText) {
+                    // Fallback to display the raw text if status is not 400 and text exists
+                     errorMessage = errorText;
+                }
+                
+                throw new Error(errorMessage);
+            }
+        } catch (error) {
+            console.error('Booking error:', error);
+            formMessage.textContent = `Error: ${error.message}. Please try again.`;
+            formMessage.style.color = 'red';
+            formMessage.classList.remove('hidden');
+        }
+    });
+</script>

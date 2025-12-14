@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - CarShowcase Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <nav class="nav">
+            <div class="logo">
+                <div>
+                <!-- Using a placeholder logo -->
+                <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+            </div>
+            </div>
+            <ul class="more">
+                <!-- Nav bar will be built by script.js -->
+            </ul>
+        </nav>
+    </header>
+
+    <section class="form-section">
+        <div class="form-container">
+            <h1>Create Account</h1>
+            <p>Join us to start browsing or list your cars.</p>
+            <form id="register-form" class="form-input-group">
+                <input type="text" id="username" placeholder="Username (min 3 chars)" required>
+                <input type="email" id="email" placeholder="Email Address" required>
+                <input type="password" id="password" placeholder="Password (min 8 chars)" required>
+                
+                <label>Register as:</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="role" value="ROLE_USER" checked> Common User</label>
+                    <label><input type="radio" name="role" value="ROLE_OWNER"> Showroom Owner</label>
+                </div>
+
+                <!-- Fields for Owner, hidden by default -->
+                <div id="owner-fields" class="form-input-group hidden" style="gap: 20px;">
+                    <input type="text" id="showroomName" placeholder="Your Showroom's Name">
+                    <input type="text" id="showroomLocation" placeholder="Your Showroom's Location (e.g., City)">
+                </div>
+
+                <button type="submit">Register</button>
+            </form>
+            <div id="error-message" class="hidden" style="color: red; margin-top: 15px;"></div>
+            <p class="form-link">Already have an account? <a href="login.html">Login here</a></p>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script>
+        const ownerFields = document.getElementById('owner-fields');
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'ROLE_OWNER') {
+                    ownerFields.classList.remove('hidden');
+                } else {
+                    ownerFields.classList.add('hidden');
+                }
+            });
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const errorContainer = document.getElementById('error-message');
+            errorContainer.classList.add('hidden');
+
+            const registerRequest = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: document.querySelector('input[name="role"]:checked').value
+            };
+
+            if (registerRequest.role === 'ROLE_OWNER') {
+                registerRequest.showroomName = document.getElementById('showroomName').value;
+                registerRequest.showroomLocation = document.getElementById('showroomLocation').value;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(registerRequest)
+                });
+
+                if (response.ok) {
+                    // Success! Redirect to login.
+                    window.location.href = 'login.html?registered=true';
+                } else {
+                    const errorText = await response.text();
+                    errorContainer.textContent = `Registration failed: ${errorText}`;
+                    errorContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                errorContainer.textContent = 'An error occurred. Please try again later.';
+                errorContainer.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

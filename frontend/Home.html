@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>https:/LuxuryAutoDeal/home</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
+    <style>
+        .bg_image{
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 0;
+        }
+        .content{
+            z-index: 1;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <header>
+        <nav class="nav">
+            <div>
+                <!-- Using a placeholder logo -->
+                <img class="logo" src="assets/minor-project-logo.svg" height="70" alt="Luxury Auto Deal">
+            </div>
+            <ul class="more">
+                <!-- 
+                  This part is now dynamic! 
+                  The new 'script.js' file will automatically build the links here
+                  (e.g., Home, Inventory, Login, Register)
+                  or (Home, Inventory, My Dashboard, Logout)
+                -->
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="Home">
+        
+        <aside>
+            <div id="slide" class="hidden">
+                <!-- Using a placeholder logo -->
+                <img src="assets/minor-project-logo.svg" height="250px" alt="" class="logo">
+                <div class="text">About Us <br>
+                    Welcome to Car Showcase Hub, an online destination created for car lovers and enthusiasts. Our
+                    website is designed to showcase a wide collection of cars. <br>
+                    We don’t sell cars, but we give you the chance to explore models with detailed specifications,
+                    high-quality images, and key highlights. Whether you are a
+                    student researching or simply curious about cars, our platform is here to full fill your passion.
+                    <br>
+                    At Car Showcase Hub, our mission is to make car exploration simple, exciting, and informative. <br>
+                    We focus on:
+                    Detailed Car Profiles – Specs, features, and unique highlights of each model.
+                    We aim to be more than just a website — a virtual showroom where every car has a story to tell.
+                </div>
+            </div>
+        </aside>
+
+        <div class="content">
+            <h1>Experience the Future of Driving</h1>
+            <p>Discover our latest collection of premium vehicles.</p>
+            <button><a href="inventary.html">Explore Models</a></button>
+        </div>
+        <div class="curve"></div>
+        <div>
+            <img src="assets/hero-bg.jpg" width="100%" class="bg_image" alt="">
+        </div>
+    </section>
+
+    <!-- 
+      THIS IS THE MOST IMPORTANT ADDITION.
+      This new script.js file handles the dynamic navigation bar.
+    -->
+    <script src="script.js"></script>
+</body>
+</html>
