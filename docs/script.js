@@ -34,7 +34,7 @@ function updateNavigationBar() {
     
     // Default links (Home, Inventory) are included for everyone
     let linksHtml = `
-        <li><a href="index.html">Home</a></li>
+        <li><a href="/minor-project/index.html">Home</a></li>
         <li><a href="inventary.html">Inventory</a></li>
     `; 
 
