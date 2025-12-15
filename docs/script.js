@@ -9,7 +9,7 @@
  */
 
 // Base URL for your Spring Boot API
-const API_BASE_URL = 'https://minor-project-8e6z.onrender.com';
+const API_BASE_URL = 'https://minor-project-h58u.onrender.com';
 
 /**
  * Runs on every page load to check auth status and update the nav bar.
