@@ -86,7 +86,7 @@ function logout() {
     localStorage.removeItem('username');
     
     // Redirect to home page
-    window.location.href = 'Home.html';
+    window.location.href = 'index.html';
 }
 
 /**
