@@ -81,9 +81,16 @@
             };
 
             if (registerRequest.role === 'ROLE_OWNER') {
-                registerRequest.showroomName = document.getElementById('showroomName').value;
-                registerRequest.showroomLocation = document.getElementById('showroomLocation').value;
-            }
+    registerRequest.showroomName = document.getElementById('showroomName').value.trim();
+    registerRequest.showroomLocation = document.getElementById('showroomLocation').value.trim();
+
+    if (!registerRequest.showroomName || !registerRequest.showroomLocation) {
+        errorContainer.textContent = "Showroom name and location are required for owners.";
+        errorContainer.classList.remove('hidden');
+        return;
+    }
+}
+
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
